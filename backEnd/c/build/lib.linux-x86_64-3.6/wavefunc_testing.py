@@ -6,10 +6,15 @@ FRAME_RATE = 44100
 DURATION = 3
 
 timbre1 = tuple([math.sin(2 * math.pi * x) for x in range(101)])
-note1 = (440, ((0.0, timbre1),), ((0.0, 1.0), (2.5, 0.0)))
-note2 = ()
-note3 = ()
-note_data = (1, (note1, ))
+note1 = {
+    "start_frame": 10_000,
+    "max_amplitude": 10_000
+}
+note2 = {
+    "start_frame": 5_000,
+    "max_amplitude": 10_000
+}
+note_data = (note1, note2)
 
 audio = wave.open("test.wav", 'wb')
 audio.setnchannels(1)

@@ -1,5 +1,6 @@
 scratch
 *.wav
 *.cbp
+*.layout
 .idea
 simpleVersion/.idea
