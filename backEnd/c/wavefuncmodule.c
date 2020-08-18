@@ -13,7 +13,6 @@
 #include "freenote.c"
 #include "writewave.c"
 
-// This is
 
 static PyObject*
 wavefunc(PyObject* self, PyObject* args)
