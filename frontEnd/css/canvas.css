@@ -1,0 +1,8 @@
+#canvas table {
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+#canvas td {
+  border: 1px solid var(--main-white);
+  overflow: hidden;
+}

@@ -1,15 +1,31 @@
 const fs = require("fs");
 const http = require("http");
-const { spawn, spawnSync } = require("child_process");
+const { spawn, spawnSync } = require("child_process")
 const PORT = 10000;
 "use strict";
 
-http.createServer((req, res) => {
+const serverFunction = (req, res) => {
   if (req.method == "GET") {
-    if (!req.url.startsWith("/backEnd/streams")) {
-      // if root url requested, send people to trumpet app page
-      const filePath = (req.url == "/") ?
-                       "frontEnd/trumpetApp.html" : req.url.slice(1);
+    if (!req.url.startsWith("/musicCanvas")) {
+      res.writeHead(403, {"Content-Type": "text/plain"});
+      res.write("MusicCanvas server will not serve non-musicCanvas pages");
+      res.end();
+      return;
+    }
+    const path = req.url.slice("/musicCanvas".length);
+    if (path == "/" || path == "") {
+      // if root url requested, respond with main page
+      fs.readFile("frontEnd/main.html", (error, data) => {
+        if (error) {
+          console.log(error);
+        } else {
+          res.writeHead(200, {"Content-Type": "text/html"});
+          res.write(data);
+          res.end();
+        }
+      });
+    } else if (path.startsWith("/frontEnd")) {
+      const filePath = path.slice(1);
       fs.readFile(filePath, (error, data) => {
         if (error) {
           res.writeHead(404, {"content-type": "text/plain"})
@@ -18,11 +34,11 @@ http.createServer((req, res) => {
         } else {
           const extension = filePath.split(".")[1];
           switch (extension) {
-            case "html":
-              res.writeHead(200, {"Content-Type": "text/html"});
-              break;
             case "js":
               res.writeHead(200, {"Content-Type": "application/javascript"});
+              break;
+            case "css":
+              res.writeHead(200, {"Content-Type": "text/css"});
               break;
             case "txt":
             default:
@@ -32,10 +48,10 @@ http.createServer((req, res) => {
           res.end();
         }
       });
-    } else {
+    } else if (path.startsWith("/backEnd/streams")) {
       // req.url starts with /backEnd/streams so we need to
       // serve up the relevant stream
-      trackHash = req.url.slice("/backEnd/streams/".length);
+      trackHash = path.slice("/backEnd/streams/".length);
       const trackPath = `backEnd/trackFiles/${trackHash}.json`;
       // we create a pipe whose name is randomised to receive output
       const pipeName = Math.floor(Math.random()*(2**44)).toString(16);
@@ -63,6 +79,10 @@ http.createServer((req, res) => {
           spawnSync("rm", [trackPath]);
         }
       });
+    } else {
+      res.writeHead(403, {"Content-Type": "text/plain"});
+      res.write("Request path is not an allowed directory");
+      res.end();
     }
   } else if (req.method == "POST") {
     file = req.url.slice(1);
@@ -92,4 +112,9 @@ http.createServer((req, res) => {
       }
     });
   }
-}).listen(PORT);
+}
+
+exports.musicCanvasServer = serverFunction;
+if (require.main === module) {
+  http.createServer(serverFunction).listen(PORT);
+}

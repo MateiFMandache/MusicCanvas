@@ -4,3 +4,4 @@ scratch
 *.layout
 .idea
 simpleVersion/.idea
+frontEnd/node_modules

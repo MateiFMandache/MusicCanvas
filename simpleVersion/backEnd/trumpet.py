@@ -21,7 +21,7 @@ freq = track_object["frequency"]
 number_of_frames = int(FRAME_RATE * duration)
 frames_per_cycle = FRAME_RATE / freq
 number_of_chunks = ceil(number_of_frames/CHUNK_SIZE)
-last_chunk_size = number_of_frames - number_of_chunks * CHUNK_SIZE
+last_chunk_size = number_of_frames - (number_of_chunks - 1) * CHUNK_SIZE
 
 with open(pipe_path, "wb") as pipe:
     audio = wave.open(pipe, 'wb')
