@@ -25,6 +25,18 @@ var Window = function (_React$Component) {
         case windowStates.TITLE:
           innerElement = React.createElement(TitleWindowConnected, null);
           break;
+        case windowStates.SELECT_SCALE:
+          innerElement = React.createElement(SelectScaleWindowConnected, null);
+          break;
+        case windowStates.SELECT_TIMING:
+          innerElement = React.createElement(SelectTimingWindowConnected, null);
+          break;
+        case windowStates.SELECT_SECTION:
+          innerElement = React.createElement(SelectSectionWindowConnected, null);
+          break;
+        case windowStates.NEW_SECTION:
+          innerElement = React.createElement(NewSectionWindowConnected, null);
+          break;
         case windowStates.NONE:
           return React.createElement("div", null);
       }

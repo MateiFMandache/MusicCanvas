@@ -9,7 +9,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var MARGIN_WIDTH = 30;
-var TABLE_WIGGLE_ROOM = 5;
+var TABLE_WIGGLE_ROOM = 10;
 
 var Canvas = function (_React$Component) {
   _inherits(Canvas, _React$Component);
@@ -55,7 +55,7 @@ var CanvasArea = function (_React$Component2) {
     key: "render",
     value: function render() {
       return React.createElement("table", { style: {
-          width: this.props.viewportSize.width - TABLE_WIGGLE_ROOM,
+          width: this.props.viewportSize.width - document.getElementById("canvas").getBoundingClientRect().left - TABLE_WIGGLE_ROOM,
           height: this.props.viewportSize.height - document.getElementById("canvas").getBoundingClientRect().top - TABLE_WIGGLE_ROOM
         } }, React.createElement("tr", { style: { height: MARGIN_WIDTH } }, React.createElement("td", { style: { width: MARGIN_WIDTH } }), React.createElement("td", null)), React.createElement("tr", null, React.createElement("td", null), React.createElement("td", null, React.createElement(CanvasConnected, null))));
     }

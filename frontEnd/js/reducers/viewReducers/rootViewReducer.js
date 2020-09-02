@@ -3,5 +3,6 @@
 var rootViewReducer = Redux.combineReducers({
   window: windowReducer,
   tool: toolReducer,
-  viewportSize: viewportSizeReducer
+  viewportSize: viewportSizeReducer,
+  sections: sectionsReducer
 });

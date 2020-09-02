@@ -1,5 +1,5 @@
 const MARGIN_WIDTH = 30;
-const TABLE_WIGGLE_ROOM = 5;
+const TABLE_WIGGLE_ROOM = 10;
 
 class Canvas extends React.Component {
   constructor(props) {
@@ -34,6 +34,7 @@ class CanvasArea extends React.Component {
     return (
       <table style={{
         width: this.props.viewportSize.width
+          -document.getElementById("canvas").getBoundingClientRect().left
           -TABLE_WIGGLE_ROOM,
         height: this.props.viewportSize.height
           -document.getElementById("canvas").getBoundingClientRect().top

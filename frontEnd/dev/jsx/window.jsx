@@ -8,6 +8,18 @@ class Window extends React.Component {
       case windowStates.TITLE:
         innerElement = <TitleWindowConnected />
         break;
+      case windowStates.SELECT_SCALE:
+        innerElement = <SelectScaleWindowConnected />
+        break;
+      case windowStates.SELECT_TIMING:
+        innerElement = <SelectTimingWindowConnected />
+        break;
+      case windowStates.SELECT_SECTION:
+        innerElement = <SelectSectionWindowConnected />
+        break;
+      case windowStates.NEW_SECTION:
+        innerElement = <NewSectionWindowConnected />
+        break;
       case windowStates.NONE:
         return <div />
     }
