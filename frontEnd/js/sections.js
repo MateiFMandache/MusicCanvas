@@ -26,7 +26,9 @@ var SectionsPanel = function (_React$Component) {
         style: { textAlign: "center" },
         onClick: this.props.newSection }, "New section...")), React.createElement("tr", null, React.createElement("td", { style: { textAlign: "right" } }, "Scale:"), React.createElement("td", { className: "clickable",
         onClick: this.props.chooseScale }, this.props.currentSection.tonic.name + " " + this.props.currentSection.scaleType.name)), React.createElement("tr", null, React.createElement("td", { style: { textAlign: "right" } }, "Timing:"), React.createElement("td", { className: "clickable",
-        onClick: this.props.chooseTiming }, "TBA")));
+        onClick: this.props.chooseTiming }, (this.props.currentSection.bars + " bars of\n              " + this.props.currentSection.beatsPerBar + " beats").replace(/\s{2,}/, " ")
+      /* get rid of excess whitespace */
+      )));
     }
   }]);
 
@@ -171,13 +173,96 @@ var SelectTimingWindow = function (_React$Component3) {
   function SelectTimingWindow(props) {
     _classCallCheck(this, SelectTimingWindow);
 
-    return _possibleConstructorReturn(this, (SelectTimingWindow.__proto__ || Object.getPrototypeOf(SelectTimingWindow)).call(this, props));
+    var _this4 = _possibleConstructorReturn(this, (SelectTimingWindow.__proto__ || Object.getPrototypeOf(SelectTimingWindow)).call(this, props));
+
+    _this4.barNumberChange = _this4.barNumberChange.bind(_this4);
+    _this4.beatsPerBarChange = _this4.beatsPerBarChange.bind(_this4);
+    _this4.subdivisionsChange = _this4.subdivisionsChange.bind(_this4);
+    _this4.state = {
+      // flags showing whether each entry is blank
+      barsBlank: false,
+      beatsPerBarBlank: false,
+      subdivisionsBlank: false
+    };
+    return _this4;
   }
 
   _createClass(SelectTimingWindow, [{
+    key: "barNumberChange",
+    value: function barNumberChange(event) {
+      var newValue = event.target.value;
+      if (newValue == "") {
+        this.setState({ barsBlank: true });
+      } else {
+        var number = Number(newValue);
+        if (isNaN(number)) {
+          alert("Entry must be a number");
+        } else if (number > 300 || number < 1 || !Number.isInteger(number)) {
+          alert("Number of bars must be a whole number between 1 and 300");
+        } else {
+          this.setState({ barsBlank: false });
+          this.props.newNumberOfBars(number);
+        }
+      }
+    }
+  }, {
+    key: "beatsPerBarChange",
+    value: function beatsPerBarChange(event) {
+      var newValue = event.target.value;
+      if (newValue == "") {
+        this.setState({ beatsPerBarBlank: true });
+      } else {
+        var number = Number(newValue);
+        if (isNaN(number)) {
+          alert("Entry must be a number");
+        } else if (number > 12 || number < 1 || !Number.isInteger(number)) {
+          alert("Number of beats per bar must be a whole number between 1 and 12");
+        } else {
+          this.setState({ beatsPerBarBlank: false });
+          this.props.newBeatsPerBar(number);
+        }
+      }
+    }
+  }, {
+    key: "subdivisionsChange",
+    value: function subdivisionsChange(event) {
+      var newValue = event.target.value;
+      if (newValue == "") {
+        this.setState({ subdivisionsBlank: true });
+      } else {
+        var number = Number(newValue);
+        if (isNaN(number)) {
+          alert("Entry must be a number");
+        } else if (number > 8 || number < 1 || !Number.isInteger(number)) {
+          alert("Number of subdivisions must be a whole number between 1 and 8");
+        } else {
+          this.setState({ subdivisionsBlank: false });
+          this.props.newSubdivisionsPerBeat(number);
+        }
+      }
+    }
+  }, {
     key: "render",
     value: function render() {
-      return React.createElement("p", null, "tba");
+      return React.createElement("table", null, React.createElement("tr", null, React.createElement("td", { style: { textAlign: "right" } }, React.createElement("label", { "for": "number-bars-entry" }, "Number of bars:")), React.createElement("td", null, React.createElement("input", {
+        type: "text",
+        className: "text-entry",
+        id: "number-bars-entry",
+        style: { marginRight: 30, width: 100 },
+        value: this.state.barsBlank ? "" : this.props.bars,
+        onChange: this.barNumberChange }))), React.createElement("tr", null, React.createElement("td", { style: { textAlign: "right" } }, React.createElement("label", { "for": "beats-per-bar-entry" }, "Beats per bar:")), React.createElement("td", null, React.createElement("input", {
+        type: "text",
+        className: "text-entry",
+        id: "beats-per-bar-entry",
+        style: { marginRight: 30, width: 100 },
+        value: this.state.beatsPerBarBlank ? "" : this.props.beatsPerBar,
+        onChange: this.beatsPerBarChange }))), React.createElement("tr", null, React.createElement("td", { style: { textAlign: "right" } }, React.createElement("label", { "for": "subdivisions-per-beat-entry" }, "Subdivisions per beat:")), React.createElement("td", null, React.createElement("input", {
+        type: "text",
+        className: "text-entry",
+        id: "subdivisions-per-beat-entry",
+        style: { marginRight: 30, width: 100 },
+        value: this.state.subdivisionsBlank ? "" : this.props.subdivisionsPerBeat,
+        onChange: this.subdivisionsChange }))));
     }
   }]);
 
@@ -188,10 +273,54 @@ var SelectTimingWindowConnected = void 0;
 
 (function () {
   var state2props = function state2props(state) {
-    return {};
+    return {
+      bars: state.view.sections.byId[state.view.sections.current].bars,
+      beatsPerBar: state.view.sections.byId[state.view.sections.current].beatsPerBar,
+      subdivisionsPerBeat: state.view.sections.byId[state.view.sections.current].subdivisionsPerBeat
+    };
   };
   var dispatch2props = function dispatch2props(dispatch) {
-    return {};
+    return {
+      newNumberOfBars: function (_newNumberOfBars) {
+        function newNumberOfBars(_x3) {
+          return _newNumberOfBars.apply(this, arguments);
+        }
+
+        newNumberOfBars.toString = function () {
+          return _newNumberOfBars.toString();
+        };
+
+        return newNumberOfBars;
+      }(function (bars) {
+        dispatch(newNumberOfBars(bars));
+      }),
+      newBeatsPerBar: function (_newBeatsPerBar) {
+        function newBeatsPerBar(_x4) {
+          return _newBeatsPerBar.apply(this, arguments);
+        }
+
+        newBeatsPerBar.toString = function () {
+          return _newBeatsPerBar.toString();
+        };
+
+        return newBeatsPerBar;
+      }(function (beatsPerBar) {
+        dispatch(newBeatsPerBar(beatsPerBar));
+      }),
+      newSubdivisionsPerBeat: function (_newSubdivisionsPerBeat) {
+        function newSubdivisionsPerBeat(_x5) {
+          return _newSubdivisionsPerBeat.apply(this, arguments);
+        }
+
+        newSubdivisionsPerBeat.toString = function () {
+          return _newSubdivisionsPerBeat.toString();
+        };
+
+        return newSubdivisionsPerBeat;
+      }(function (subdivisions) {
+        dispatch(newSubdivisionsPerBeat(subdivisions));
+      })
+    };
   };
   SelectTimingWindowConnected = connect(state2props, dispatch2props)(SelectTimingWindow);
 })();

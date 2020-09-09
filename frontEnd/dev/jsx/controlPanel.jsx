@@ -4,6 +4,8 @@ class ControlPanel extends React.Component {
   }
   render() {
     switch(this.props.tool) {
+      case tools.MOVE:
+        return <MovePanelConnected />
       case tools.SECTIONS:
         return <SectionsPanelConnected />;
       default:
