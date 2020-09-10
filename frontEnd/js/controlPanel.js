@@ -21,6 +21,8 @@ var ControlPanel = function (_React$Component) {
     key: "render",
     value: function render() {
       switch (this.props.tool) {
+        case tools.MOVE:
+          return React.createElement(MovePanelConnected, null);
         case tools.SECTIONS:
           return React.createElement(SectionsPanelConnected, null);
         default:

@@ -12,6 +12,12 @@ const CHOOSE_TIMING = "CHOOSE_TIMING";
 const CHOOSE_SECTION = "CHOOSE_SECTION";
 const MAKE_NEW_SECTION = "MAKE_NEW_SECTION";
 const RESIZE_CANVAS = "RESIZE_CANVAS";
+const NEW_MOVE_TYPE = "NEW_MOVE_TYPE";
+const MOVE = "MOVE";
+const PITCH_ZOOM_IN = "PITCH_ZOOM_IN";
+const PITCH_ZOOM_OUT = "PITCH_ZOOM_OUT";
+const TIME_ZOOM_IN = "TIME_ZOOM_IN";
+const TIME_ZOOM_OUT = "TIME_ZOOM_OUT";
 
 function newTitle(title) {
   return {
@@ -56,46 +62,46 @@ function newScaleType(scaleType) {
 function chooseScale() {
   return {
     type: CHOOSE_SCALE
-  }
+  };
 }
 
 function newNumberOfBars(bars) {
   return {
     type: NEW_NUMBER_OF_BARS,
     bars
-  }
+  };
 }
 
 function newBeatsPerBar(beatsPerBar) {
   return {
     type: NEW_BEATS_PER_BAR,
     beatsPerBar
-  }
+  };
 }
 
 function newSubdivisionsPerBeat(subdivisions) {
   return {
     type: NEW_SUBDIVISIONS_PER_BEAT,
     subdivisions
-  }
+  };
 }
 
 function chooseTiming() {
   return {
     type: CHOOSE_TIMING
-  }
+  };
 }
 
 function chooseSection() {
   return {
     type: CHOOSE_SECTION
-  }
+  };
 }
 
 function makeNewSection() {
   return {
     type: MAKE_NEW_SECTION
-  }
+  };
 }
 
 function resizeCanvas(width, height) {
@@ -103,5 +109,56 @@ function resizeCanvas(width, height) {
     type: RESIZE_CANVAS,
     width,
     height
-  }
+  };
+}
+
+function newMoveType(moveType) {
+  return {
+    type: NEW_MOVE_TYPE,
+    moveType
+  };
+}
+
+function move(positions) {
+  return {
+    type: MOVE,
+    // positions has (optional) pitchPos and timePos attributes
+    positions
+  };
+}
+
+function pitchZoomIn(pitchPoint) {
+  return {
+    type: PITCH_ZOOM_IN,
+    // The point that was clicked on. This point stays fixed
+    // when we zoom in
+    pitchPoint
+  };
+}
+
+function pitchZoomOut(pitchPoint) {
+  return {
+    type: PITCH_ZOOM_OUT,
+    // The point that was clicked on. This point stays fixed
+    // when we zoom out
+    pitchPoint
+  };
+}
+
+function timeZoomIn(timePoint) {
+  return {
+    type: TIME_ZOOM_IN,
+    // The point that was clicked on. This point stays fixed
+    // when we zoom in
+    timePoint
+  };
+}
+
+function timeZoomOut(timePoint) {
+  return {
+    type: TIME_ZOOM_OUT,
+    // The point that was clicked on. This point stays fixed
+    // when we zoom out
+    timePoint
+  };
 }

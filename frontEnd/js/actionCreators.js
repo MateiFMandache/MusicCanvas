@@ -14,6 +14,12 @@ var CHOOSE_TIMING = "CHOOSE_TIMING";
 var CHOOSE_SECTION = "CHOOSE_SECTION";
 var MAKE_NEW_SECTION = "MAKE_NEW_SECTION";
 var RESIZE_CANVAS = "RESIZE_CANVAS";
+var NEW_MOVE_TYPE = "NEW_MOVE_TYPE";
+var MOVE = "MOVE";
+var PITCH_ZOOM_IN = "PITCH_ZOOM_IN";
+var PITCH_ZOOM_OUT = "PITCH_ZOOM_OUT";
+var TIME_ZOOM_IN = "TIME_ZOOM_IN";
+var TIME_ZOOM_OUT = "TIME_ZOOM_OUT";
 
 function newTitle(title) {
   return {
@@ -105,5 +111,56 @@ function resizeCanvas(width, height) {
     type: RESIZE_CANVAS,
     width: width,
     height: height
+  };
+}
+
+function newMoveType(moveType) {
+  return {
+    type: NEW_MOVE_TYPE,
+    moveType: moveType
+  };
+}
+
+function move(positions) {
+  return {
+    type: MOVE,
+    // positions has (optional) pitchPos and timePos attributes
+    positions: positions
+  };
+}
+
+function pitchZoomIn(pitchPoint) {
+  return {
+    type: PITCH_ZOOM_IN,
+    // The point that was clicked on. This point stays fixed
+    // when we zoom in
+    pitchPoint: pitchPoint
+  };
+}
+
+function pitchZoomOut(pitchPoint) {
+  return {
+    type: PITCH_ZOOM_OUT,
+    // The point that was clicked on. This point stays fixed
+    // when we zoom out
+    pitchPoint: pitchPoint
+  };
+}
+
+function timeZoomIn(timePoint) {
+  return {
+    type: TIME_ZOOM_IN,
+    // The point that was clicked on. This point stays fixed
+    // when we zoom in
+    timePoint: timePoint
+  };
+}
+
+function timeZoomOut(timePoint) {
+  return {
+    type: TIME_ZOOM_OUT,
+    // The point that was clicked on. This point stays fixed
+    // when we zoom out
+    timePoint: timePoint
   };
 }

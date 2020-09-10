@@ -26,6 +26,10 @@ h1 {
 .clickable {
   cursor: pointer;
 }
+#control-panel .selected {
+  background-color: var(--main-light);
+  border-radius: var(--radius);
+}
 .windowContainer {
   position: absolute;
   top: 0;

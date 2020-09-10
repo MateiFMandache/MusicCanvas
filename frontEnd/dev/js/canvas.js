@@ -1,9 +1,5 @@
 const MARGIN_WIDTH = 45;
 const TABLE_WIGGLE_ROOM = 10;
-const STANDARD_OCTAVE_SIZE = 150;
-const STANDARD_BEAT_SIZE = 50;
-const OCTAVE_RANGE = 9;
-const CANVAS_MARGIN = 12;
 
 class PitchLines extends React.Component {
   constructor(props) {
@@ -110,13 +106,81 @@ let TimeLinesConnected;
 class Canvas extends React.Component {
   constructor(props) {
     super(props);
+    this.grab = this.grab.bind(this);
+  }
+  grab(e) {
+    const canvas = e.target;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startPitchPos = this.props.pitchPos;
+    const startTimePos = this.props.timePos;
+    const docElem = document.documentElement;
+    docElem.style.setProperty("cursor", "grabbing");
+    canvas.style.setProperty("cursor", "grabbing");
+    const release = () => {
+      docElem.style.removeProperty("cursor");
+      canvas.style.setProperty("cursor", "grab");
+      docElem.removeEventListener("mouseup", release);
+      docElem.removeEventListener("mousemove", move);
+    };
+    let move = event => {
+      this.props.move({
+        timePos: -(event.clientX - startX) + startTimePos,
+        pitchPos: -(event.clientY - startY) + startPitchPos
+      });
+    };
+    move = move.bind(this);
+    docElem.addEventListener("mouseup", release);
+    docElem.addEventListener("mousemove", move);
   }
   render() {
     const width = this.props.beats * this.props.timeZoom * STANDARD_BEAT_SIZE;
     const height = OCTAVE_RANGE * this.props.pitchZoom * STANDARD_OCTAVE_SIZE;
+    let moveStyle, clickCallback;
+    const canvasDiv = document.getElementById("canvas-containing-div");
+    switch (this.props.moveType) {
+      case undefined:
+        moveStyle = {};
+        clickCallback = () => {};
+        break;
+      case moveTypes.MOVE:
+        moveStyle = { cursor: "grab" };
+        clickCallback = this.grab;
+        break;
+      case moveTypes.PITCH_PLUS:
+        moveStyle = { cursor: "zoom-in" };
+        clickCallback = event => {
+          this.props.pitchZoomIn(event.clientY - canvasDiv.getBoundingClientRect().top);
+        };
+        break;
+      case moveTypes.PITCH_MINUS:
+        moveStyle = { cursor: "zoom-out" };
+        clickCallback = event => {
+          this.props.pitchZoomOut(event.clientY - canvasDiv.getBoundingClientRect().top);
+        };
+        break;
+      case moveTypes.TIME_PLUS:
+        moveStyle = { cursor: "zoom-in" };
+        clickCallback = event => {
+          this.props.timeZoomIn(event.clientX - canvasDiv.getBoundingClientRect().left);
+        };
+        break;
+      case moveTypes.TIME_MINUS:
+        moveStyle = { cursor: "zoom-out" };
+        clickCallback = event => {
+          this.props.timeZoomOut(event.clientX - canvasDiv.getBoundingClientRect().left);
+        };
+        break;
+    }
     return React.createElement(
       "svg",
-      { width: width + 2 * CANVAS_MARGIN, height: height + 2 * CANVAS_MARGIN },
+      { width: width + 2 * CANVAS_MARGIN, height: height + 2 * CANVAS_MARGIN,
+        style: Object.assign({
+          position: "absolute",
+          top: -(CANVAS_MARGIN + this.props.pitchPos),
+          left: -(CANVAS_MARGIN + this.props.timePos)
+        }, moveStyle),
+        onMouseDown: clickCallback },
       React.createElement(PitchLinesConnected, { zoom: this.props.pitchZoom, length: width }),
       React.createElement(TimeLinesConnected, { zoom: this.props.timeZoom, length: height })
     );
@@ -129,9 +193,28 @@ let CanvasConnected;
   const state2props = state => ({
     pitchZoom: state.view.canvas.pitchZoom,
     timeZoom: state.view.canvas.timeZoom,
-    beats: state.view.sections.byId[state.view.sections.current].beats
+    pitchPos: state.view.canvas.pitchPos,
+    timePos: state.view.canvas.timePos,
+    beats: state.view.sections.byId[state.view.sections.current].beats,
+    moveType: state.view.tool == tools.MOVE ? state.view.move : undefined
   });
-  const dispatch2props = dispatch => ({});
+  const dispatch2props = dispatch => ({
+    move: positions => {
+      dispatch(move(positions));
+    },
+    pitchZoomIn: pitchPoint => {
+      dispatch(pitchZoomIn(pitchPoint));
+    },
+    pitchZoomOut: pitchPoint => {
+      dispatch(pitchZoomOut(pitchPoint));
+    },
+    timeZoomIn: timePoint => {
+      dispatch(timeZoomIn(timePoint));
+    },
+    timeZoomOut: timePoint => {
+      dispatch(timeZoomOut(timePoint));
+    }
+  });
   CanvasConnected = connect(state2props, dispatch2props)(Canvas);
 })();
 
@@ -168,7 +251,9 @@ class CanvasArea extends React.Component {
           null,
           React.createElement(
             "div",
-            { style: {
+            { id: "canvas-containing-div",
+              style: {
+                position: "relative",
                 width: this.props.width,
                 height: this.props.height,
                 overflow: "hidden"

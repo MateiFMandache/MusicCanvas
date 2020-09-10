@@ -10,10 +10,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var MARGIN_WIDTH = 45;
 var TABLE_WIGGLE_ROOM = 10;
-var STANDARD_OCTAVE_SIZE = 150;
-var STANDARD_BEAT_SIZE = 50;
-var OCTAVE_RANGE = 9;
-var CANVAS_MARGIN = 12;
 
 var PitchLines = function (_React$Component) {
   _inherits(PitchLines, _React$Component);
@@ -149,15 +145,92 @@ var Canvas = function (_React$Component3) {
   function Canvas(props) {
     _classCallCheck(this, Canvas);
 
-    return _possibleConstructorReturn(this, (Canvas.__proto__ || Object.getPrototypeOf(Canvas)).call(this, props));
+    var _this5 = _possibleConstructorReturn(this, (Canvas.__proto__ || Object.getPrototypeOf(Canvas)).call(this, props));
+
+    _this5.grab = _this5.grab.bind(_this5);
+    return _this5;
   }
 
   _createClass(Canvas, [{
+    key: "grab",
+    value: function grab(e) {
+      var _this6 = this;
+
+      var canvas = e.target;
+      var startX = e.clientX;
+      var startY = e.clientY;
+      var startPitchPos = this.props.pitchPos;
+      var startTimePos = this.props.timePos;
+      var docElem = document.documentElement;
+      docElem.style.setProperty("cursor", "grabbing");
+      canvas.style.setProperty("cursor", "grabbing");
+      var release = function release() {
+        docElem.style.removeProperty("cursor");
+        canvas.style.setProperty("cursor", "grab");
+        docElem.removeEventListener("mouseup", release);
+        docElem.removeEventListener("mousemove", move);
+      };
+      var move = function move(event) {
+        _this6.props.move({
+          timePos: -(event.clientX - startX) + startTimePos,
+          pitchPos: -(event.clientY - startY) + startPitchPos
+        });
+      };
+      move = move.bind(this);
+      docElem.addEventListener("mouseup", release);
+      docElem.addEventListener("mousemove", move);
+    }
+  }, {
     key: "render",
     value: function render() {
+      var _this7 = this;
+
       var width = this.props.beats * this.props.timeZoom * STANDARD_BEAT_SIZE;
       var height = OCTAVE_RANGE * this.props.pitchZoom * STANDARD_OCTAVE_SIZE;
-      return React.createElement("svg", { width: width + 2 * CANVAS_MARGIN, height: height + 2 * CANVAS_MARGIN }, React.createElement(PitchLinesConnected, { zoom: this.props.pitchZoom, length: width }), React.createElement(TimeLinesConnected, { zoom: this.props.timeZoom, length: height }));
+      var moveStyle = void 0,
+          clickCallback = void 0;
+      var canvasDiv = document.getElementById("canvas-containing-div");
+      switch (this.props.moveType) {
+        case undefined:
+          moveStyle = {};
+          clickCallback = function clickCallback() {};
+          break;
+        case moveTypes.MOVE:
+          moveStyle = { cursor: "grab" };
+          clickCallback = this.grab;
+          break;
+        case moveTypes.PITCH_PLUS:
+          moveStyle = { cursor: "zoom-in" };
+          clickCallback = function clickCallback(event) {
+            _this7.props.pitchZoomIn(event.clientY - canvasDiv.getBoundingClientRect().top);
+          };
+          break;
+        case moveTypes.PITCH_MINUS:
+          moveStyle = { cursor: "zoom-out" };
+          clickCallback = function clickCallback(event) {
+            _this7.props.pitchZoomOut(event.clientY - canvasDiv.getBoundingClientRect().top);
+          };
+          break;
+        case moveTypes.TIME_PLUS:
+          moveStyle = { cursor: "zoom-in" };
+          clickCallback = function clickCallback(event) {
+            _this7.props.timeZoomIn(event.clientX - canvasDiv.getBoundingClientRect().left);
+          };
+          break;
+        case moveTypes.TIME_MINUS:
+          moveStyle = { cursor: "zoom-out" };
+          clickCallback = function clickCallback(event) {
+            _this7.props.timeZoomOut(event.clientX - canvasDiv.getBoundingClientRect().left);
+          };
+          break;
+      }
+      return React.createElement("svg", { width: width + 2 * CANVAS_MARGIN, height: height + 2 * CANVAS_MARGIN,
+        style: Object.assign({
+          position: "absolute",
+          top: -(CANVAS_MARGIN + this.props.pitchPos),
+          left: -(CANVAS_MARGIN + this.props.timePos)
+        }, moveStyle),
+        onMouseDown: clickCallback }, React.createElement(PitchLinesConnected, { zoom: this.props.pitchZoom, length: width }), React.createElement(TimeLinesConnected, { zoom: this.props.timeZoom, length: height }));
     }
   }]);
 
@@ -171,11 +244,80 @@ var CanvasConnected = void 0;
     return {
       pitchZoom: state.view.canvas.pitchZoom,
       timeZoom: state.view.canvas.timeZoom,
-      beats: state.view.sections.byId[state.view.sections.current].beats
+      pitchPos: state.view.canvas.pitchPos,
+      timePos: state.view.canvas.timePos,
+      beats: state.view.sections.byId[state.view.sections.current].beats,
+      moveType: state.view.tool == tools.MOVE ? state.view.move : undefined
     };
   };
   var dispatch2props = function dispatch2props(dispatch) {
-    return {};
+    return {
+      move: function (_move) {
+        function move(_x) {
+          return _move.apply(this, arguments);
+        }
+
+        move.toString = function () {
+          return _move.toString();
+        };
+
+        return move;
+      }(function (positions) {
+        dispatch(move(positions));
+      }),
+      pitchZoomIn: function (_pitchZoomIn) {
+        function pitchZoomIn(_x2) {
+          return _pitchZoomIn.apply(this, arguments);
+        }
+
+        pitchZoomIn.toString = function () {
+          return _pitchZoomIn.toString();
+        };
+
+        return pitchZoomIn;
+      }(function (pitchPoint) {
+        dispatch(pitchZoomIn(pitchPoint));
+      }),
+      pitchZoomOut: function (_pitchZoomOut) {
+        function pitchZoomOut(_x3) {
+          return _pitchZoomOut.apply(this, arguments);
+        }
+
+        pitchZoomOut.toString = function () {
+          return _pitchZoomOut.toString();
+        };
+
+        return pitchZoomOut;
+      }(function (pitchPoint) {
+        dispatch(pitchZoomOut(pitchPoint));
+      }),
+      timeZoomIn: function (_timeZoomIn) {
+        function timeZoomIn(_x4) {
+          return _timeZoomIn.apply(this, arguments);
+        }
+
+        timeZoomIn.toString = function () {
+          return _timeZoomIn.toString();
+        };
+
+        return timeZoomIn;
+      }(function (timePoint) {
+        dispatch(timeZoomIn(timePoint));
+      }),
+      timeZoomOut: function (_timeZoomOut) {
+        function timeZoomOut(_x5) {
+          return _timeZoomOut.apply(this, arguments);
+        }
+
+        timeZoomOut.toString = function () {
+          return _timeZoomOut.toString();
+        };
+
+        return timeZoomOut;
+      }(function (timePoint) {
+        dispatch(timeZoomOut(timePoint));
+      })
+    };
   };
   CanvasConnected = connect(state2props, dispatch2props)(Canvas);
 })();
@@ -202,7 +344,9 @@ var CanvasArea = function (_React$Component4) {
   _createClass(CanvasArea, [{
     key: "render",
     value: function render() {
-      return React.createElement("table", null, React.createElement("tr", { style: { height: MARGIN_WIDTH } }, React.createElement("td", { style: { width: MARGIN_WIDTH } }), React.createElement("td", null)), React.createElement("tr", null, React.createElement("td", null), React.createElement("td", null, React.createElement("div", { style: {
+      return React.createElement("table", null, React.createElement("tr", { style: { height: MARGIN_WIDTH } }, React.createElement("td", { style: { width: MARGIN_WIDTH } }), React.createElement("td", null)), React.createElement("tr", null, React.createElement("td", null), React.createElement("td", null, React.createElement("div", { id: "canvas-containing-div",
+        style: {
+          position: "relative",
           width: this.props.width,
           height: this.props.height,
           overflow: "hidden"
