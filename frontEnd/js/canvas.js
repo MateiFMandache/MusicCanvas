@@ -92,13 +92,18 @@ var TimeLines = function (_React$Component2) {
       var barLinePositions = [];
       var linePositions = [];
       var beatSize = STANDARD_BEAT_SIZE * this.props.zoom;
-      barLoop: for (var bar = 0; bar <= this.props.bars; bar++) {
+      var barSize = beatSize * this.props.beatsPerBar;
+      // We caculate the first and last bars in view so that we only have
+      // to draw the bars in view. This gives us a big performance boost.
+      var startBar = Math.max(0, Math.floor(this.props.viewTimeStart / barSize));
+      var endBar = Math.min(this.props.bars, Math.ceil((this.props.viewTimeStart + this.props.viewWidth) / barSize));
+      barLoop: for (var bar = startBar; bar <= endBar; bar++) {
         for (var beat = 0; beat < this.props.beatsPerBar; beat++) {
           for (var subbeat = 0; subbeat < this.props.subdivisionsPerBeat; subbeat++) {
             if (beat == 0 && subbeat == 0) {
               barLinePositions.push(bar * this.props.beatsPerBar * beatSize);
             } else {
-              if (bar == this.props.bars) break barLoop;
+              if (bar == endBar) break barLoop;
               linePositions.push((bar * this.props.beatsPerBar + beat + subbeat / this.props.subdivisionsPerBeat) * beatSize);
             }
           }
@@ -133,7 +138,9 @@ var TimeLinesConnected = void 0;
     return {
       bars: state.view.sections.byId[state.view.sections.current].bars,
       beatsPerBar: state.view.sections.byId[state.view.sections.current].beatsPerBar,
-      subdivisionsPerBeat: state.view.sections.byId[state.view.sections.current].subdivisionsPerBeat
+      subdivisionsPerBeat: state.view.sections.byId[state.view.sections.current].subdivisionsPerBeat,
+      viewWidth: state.view.canvas.width,
+      viewTimeStart: state.view.canvas.timePos
     };
   };
   TimeLinesConnected = connect(state2props, null)(TimeLines);
@@ -148,6 +155,7 @@ var Canvas = function (_React$Component3) {
     var _this5 = _possibleConstructorReturn(this, (Canvas.__proto__ || Object.getPrototypeOf(Canvas)).call(this, props));
 
     _this5.grab = _this5.grab.bind(_this5);
+    _this5.state = { grabbing: false };
     return _this5;
   }
 
@@ -162,12 +170,12 @@ var Canvas = function (_React$Component3) {
       var startPitchPos = this.props.pitchPos;
       var startTimePos = this.props.timePos;
       var docElem = document.documentElement;
+      this.setState({ grabbing: true });
       docElem.style.setProperty("cursor", "grabbing");
-      canvas.style.setProperty("cursor", "grabbing");
-      var release = function release() {
+      var _release = function release() {
+        _this6.setState({ grabbing: false });
         docElem.style.removeProperty("cursor");
-        canvas.style.setProperty("cursor", "grab");
-        docElem.removeEventListener("mouseup", release);
+        docElem.removeEventListener("mouseup", _release);
         docElem.removeEventListener("mousemove", move);
       };
       var move = function move(event) {
@@ -177,7 +185,8 @@ var Canvas = function (_React$Component3) {
         });
       };
       move = move.bind(this);
-      docElem.addEventListener("mouseup", release);
+      _release = _release.bind(this);
+      docElem.addEventListener("mouseup", _release);
       docElem.addEventListener("mousemove", move);
     }
   }, {
@@ -196,7 +205,7 @@ var Canvas = function (_React$Component3) {
           clickCallback = function clickCallback() {};
           break;
         case moveTypes.MOVE:
-          moveStyle = { cursor: "grab" };
+          moveStyle = { cursor: this.state.grabbing ? "grabbing" : "grab" };
           clickCallback = this.grab;
           break;
         case moveTypes.PITCH_PLUS:
@@ -230,7 +239,15 @@ var Canvas = function (_React$Component3) {
           top: -(CANVAS_MARGIN + this.props.pitchPos),
           left: -(CANVAS_MARGIN + this.props.timePos)
         }, moveStyle),
-        onMouseDown: clickCallback }, React.createElement(PitchLinesConnected, { zoom: this.props.pitchZoom, length: width }), React.createElement(TimeLinesConnected, { zoom: this.props.timeZoom, length: height }));
+
+        key: /* use unique key to fix display bug in chrome */
+        this.props.pitchPos + " " + this.props.timePos,
+        onMouseDown: clickCallback }, React.createElement(PitchLinesConnected, {
+        zoom: this.props.pitchZoom,
+        length: width,
+        start: true }), React.createElement(TimeLinesConnected, {
+        zoom: this.props.timeZoom,
+        length: height }));
     }
   }]);
 
@@ -326,7 +343,9 @@ function recalculateCanvasSize() {
   store.dispatch(resizeCanvas(document.documentElement.clientWidth - document.getElementById("canvas").getBoundingClientRect().left - MARGIN_WIDTH - TABLE_WIGGLE_ROOM, document.documentElement.clientHeight - document.getElementById("canvas").getBoundingClientRect().top - MARGIN_WIDTH - TABLE_WIGGLE_ROOM));
 }
 
-recalculateCanvasSize();
+document.addEventListener("DOMContentLoaded", function () {
+  recalculateCanvasSize();
+});
 
 document.defaultView.addEventListener("resize", function () {
   recalculateCanvasSize();

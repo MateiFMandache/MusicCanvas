@@ -66,8 +66,16 @@ class TimeLines extends React.Component {
     let barLinePositions = [];
     let linePositions = [];
     const beatSize = STANDARD_BEAT_SIZE * this.props.zoom;
+    const barSize = beatSize * this.props.beatsPerBar;
+    // We caculate the first and last bars in view so that we only have
+    // to draw the bars in view. This gives us a big performance boost.
+    const startBar = Math.max(0, Math.floor(this.props.viewTimeStart / barSize))
+    const endBar = Math.min(
+      this.props.bars,
+      Math.ceil((this.props.viewTimeStart + this.props.viewWidth) / barSize)
+    )
     barLoop:
-    for (let bar = 0; bar <= this.props.bars; bar++) {
+    for (let bar = startBar; bar <= endBar; bar++) {
       for (let beat = 0; beat < this.props.beatsPerBar; beat++) {
         for (let subbeat = 0; subbeat < this.props.subdivisionsPerBeat; subbeat++) {
           if (beat == 0 && subbeat == 0) {
@@ -75,7 +83,7 @@ class TimeLines extends React.Component {
                                   * this.props.beatsPerBar
                                   * beatSize);
           } else {
-            if (bar == this.props.bars) break barLoop;
+            if (bar == endBar) break barLoop;
             linePositions.push((bar * this.props.beatsPerBar
                                  + beat
                                  + subbeat / this.props.subdivisionsPerBeat
@@ -115,7 +123,9 @@ let TimeLinesConnected;
     bars: state.view.sections.byId[state.view.sections.current].bars,
     beatsPerBar: state.view.sections.byId[state.view.sections.current].beatsPerBar,
     subdivisionsPerBeat:
-      state.view.sections.byId[state.view.sections.current].subdivisionsPerBeat
+      state.view.sections.byId[state.view.sections.current].subdivisionsPerBeat,
+    viewWidth: state.view.canvas.width,
+    viewTimeStart: state.view.canvas.timePos
   })
   TimeLinesConnected = connect(state2props, null)(TimeLines);
 })();
@@ -124,6 +134,7 @@ class Canvas extends React.Component {
   constructor(props) {
     super(props);
     this.grab = this.grab.bind(this);
+    this.state = {grabbing: false};
   }
   grab(e) {
     const canvas = e.target;
@@ -132,11 +143,11 @@ class Canvas extends React.Component {
     const startPitchPos = this.props.pitchPos;
     const startTimePos = this.props.timePos;
     const docElem = document.documentElement;
+    this.setState({grabbing: true});
     docElem.style.setProperty("cursor", "grabbing");
-    canvas.style.setProperty("cursor", "grabbing");
-    const release = () => {
+    let release = () => {
+      this.setState({grabbing: false});
       docElem.style.removeProperty("cursor");
-      canvas.style.setProperty("cursor", "grab");
       docElem.removeEventListener("mouseup", release);
       docElem.removeEventListener("mousemove", move);
     }
@@ -147,6 +158,7 @@ class Canvas extends React.Component {
       });
     }
     move = move.bind(this);
+    release = release.bind(this);
     docElem.addEventListener("mouseup", release);
     docElem.addEventListener("mousemove", move);
   }
@@ -161,7 +173,7 @@ class Canvas extends React.Component {
         clickCallback = () => {};
         break;
       case moveTypes.MOVE:
-        moveStyle = {cursor: "grab"};
+        moveStyle = {cursor: this.state.grabbing ? "grabbing" : "grab"};
         clickCallback = this.grab;
         break;
       case moveTypes.PITCH_PLUS:
@@ -196,9 +208,17 @@ class Canvas extends React.Component {
           top: - (CANVAS_MARGIN + this.props.pitchPos),
           left: - (CANVAS_MARGIN + this.props.timePos)
         }, moveStyle)}
+
+        key={/* use unique key to fix display bug in chrome */
+          `${this.props.pitchPos} ${this.props.timePos}`}
         onMouseDown={clickCallback}>
-        <PitchLinesConnected zoom={this.props.pitchZoom} length={width} />
-        <TimeLinesConnected zoom={this.props.timeZoom} length={height} />
+        <PitchLinesConnected
+          zoom={this.props.pitchZoom}
+          length={width}
+          start />
+        <TimeLinesConnected
+          zoom={this.props.timeZoom}
+          length={height} />
       </svg>
     );
   }
@@ -238,7 +258,7 @@ function recalculateCanvasSize() {
   ))
 }
 
-recalculateCanvasSize();
+document.addEventListener("DOMContentLoaded", () => {recalculateCanvasSize();});
 
 document.defaultView.addEventListener("resize", () => {
   recalculateCanvasSize();
